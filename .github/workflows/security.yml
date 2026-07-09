@@ -56,6 +56,10 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
+          # Fetch the newest patch release rather than the runner's cached
+          # toolchain: govulncheck flags stdlib CVEs, and a fix often lands
+          # in a patch (e.g. go1.26.5) newer than what is pre-cached.
+          check-latest: true
           cache: true
       - name: Install govulncheck
         run: go install golang.org/x/vuln/cmd/govulncheck@latest
