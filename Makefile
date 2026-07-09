@@ -33,7 +33,10 @@ test-security: ## Run local security checks (govulncheck + gosec), mirrors CI
 	gosec ./...
 
 policy-check: ## Run OPA/Conftest policy checks locally, mirrors CI
-	conftest test --policy policy/ .github/workflows/*.yml
+	# --all-namespaces is required: the policies live in the policy.* packages,
+	# and without it conftest only evaluates the 'main' namespace and silently
+	# passes without checking anything.
+	conftest test --all-namespaces --policy policy/ .github/workflows/*.yml
 
 lint: ## Run golangci-lint
 	@command -v golangci-lint >/dev/null || go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest

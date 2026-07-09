@@ -1,0 +1,33 @@
+name: Policy
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+env:
+  CONFTEST_VERSION: "0.56.0"
+
+jobs:
+  conftest:
+    name: OPA / Conftest Policy Checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Conftest
+        run: |
+          curl -sSfL \
+            "https://github.com/open-policy-agent/conftest/releases/download/v${CONFTEST_VERSION}/conftest_${CONFTEST_VERSION}_Linux_x86_64.tar.gz" \
+            | tar -xz conftest
+          sudo mv conftest /usr/local/bin/
+          conftest --version
+      - name: Verify policy unit tests
+        run: conftest verify --policy policy/
+      - name: Check workflow governance policies
+        run: make policy-check
+      - name: Check Dockerfile policy
+        run: conftest test --all-namespaces --parser dockerfile --policy policy/ Dockerfile
