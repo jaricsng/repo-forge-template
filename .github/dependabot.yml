@@ -24,6 +24,13 @@ updates:
     open-pull-requests-limit: 10
     commit-message:
       prefix: "ci"
+    # Group all action bumps into one PR. Without this, multi-path actions
+    # like github/codeql-action (init/autobuild/analyze) open a PR per path,
+    # which cannot be merged individually — CodeQL requires matching versions.
+    groups:
+      github-actions:
+        patterns:
+          - "*"
 
   # Base image in the Dockerfile.
   - package-ecosystem: docker
