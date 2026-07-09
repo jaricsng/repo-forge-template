@@ -1,0 +1,45 @@
+name: SBOM
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  SYFT_VERSION: "1.46.0"
+
+jobs:
+  sbom:
+    name: SBOM
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
+      - name: Install Syft
+        run: |
+          curl -sSfL \
+            "https://github.com/anchore/syft/releases/download/v${SYFT_VERSION}/syft_${SYFT_VERSION}_linux_amd64.tar.gz" \
+            | tar -xz syft
+          sudo mv syft /usr/local/bin/
+          syft version
+      - name: Generate SBOM (SPDX JSON)
+        run: make sbom
+      - name: Upload SBOM artifact
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: sbom-spdx-json
+          path: sbom.spdx.json
+          if-no-files-found: error

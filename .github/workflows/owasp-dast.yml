@@ -1,0 +1,59 @@
+name: DAST
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+  schedule:
+    # Weekly baseline scan independent of code changes.
+    - cron: "41 4 * * 1"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  zap-baseline:
+    name: DAST (OWASP ZAP)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
+        with:
+          go-version-file: go.mod
+          check-latest: true
+          cache: true
+      - name: Build service
+        run: make build
+      - name: Start service
+        run: |
+          APP_PORT=8080 ./bin/app &
+          echo "APP_PID=$!" >> "$GITHUB_ENV"
+          # Wait for the liveness endpoint before scanning.
+          for i in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:8080/healthz >/dev/null 2>&1; then
+              echo "service is up"; exit 0
+            fi
+            sleep 1
+          done
+          echo "service did not become healthy" >&2; exit 1
+      - name: ZAP baseline scan
+        # ghcr image referenced in a run step, so it is not subject to the
+        # action-pinning policy; -I fails only on rules marked FAIL in
+        # test/security/zap-rules.tsv (missing CSP / HSTS), not on warnings.
+        run: |
+          docker run --network host -v "${{ github.workspace }}:/zap/wrk:ro" \
+            ghcr.io/zaproxy/zaproxy:stable \
+            zap-baseline.py \
+            -t http://127.0.0.1:8080 \
+            -c test/security/zap-rules.tsv \
+            -I
+      - name: Stop service
+        if: always()
+        run: kill "${APP_PID}" 2>/dev/null || true

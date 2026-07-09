@@ -1,0 +1,71 @@
+name: Audit Log
+
+on:
+  push:
+    branches: [main]
+  release:
+    types: [published]
+
+# contents: write is needed to push the ledger to the audit-log branch. It is
+# scoped here (not write-all, per policy) and only writes the audit-log branch,
+# never main.
+permissions:
+  contents: write
+
+concurrency:
+  # Serialise appends so concurrent runs don't race on the ledger branch.
+  group: audit-log
+  cancel-in-progress: false
+
+jobs:
+  append:
+    name: Audit Log
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      GH_TOKEN: ${{ github.token }}
+      REPO: ${{ github.repository }}
+      # All bound to env vars (never interpolated into the shell) to avoid
+      # any injection via ref or actor values.
+      ACTOR: ${{ github.actor }}
+      EVENT: ${{ github.event_name }}
+      COMMIT_SHA: ${{ github.sha }}
+      REF_NAME: ${{ github.ref_name }}
+    steps:
+      - name: Append entry to the audit-log branch
+        run: |
+          set -euo pipefail
+          ts=$(date -u +'%Y-%m-%dT%H:%M:%SZ')
+          row=$(printf '| %s | %s | %s | %s | %s |' "$ts" "$ACTOR" "$EVENT" "$COMMIT_SHA" "$REF_NAME")
+
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          work=$(mktemp -d)
+          remote="https://x-access-token:${GH_TOKEN}@github.com/${REPO}.git"
+
+          if git clone --depth 1 --branch audit-log "$remote" "$work" 2>/dev/null; then
+            cd "$work"
+          else
+            # First run: seed an orphan branch containing only the ledger.
+            git clone --depth 1 "$remote" "$work"
+            cd "$work"
+            git checkout --orphan audit-log
+            git rm -rf . >/dev/null 2>&1 || true
+            mkdir -p docs/audit
+            # Build the header without a heredoc to avoid YAML/heredoc
+            # indentation pitfalls.
+            {
+              printf '# Audit Log\n\n'
+              printf 'Immutable, append-only record of merges to `main` and published '
+              printf 'releases, maintained automatically on the `audit-log` branch by '
+              printf '`.github/workflows/audit-log.yml`. Do not edit past entries.\n\n'
+              printf '| Timestamp (UTC) | Actor | Event | Commit SHA | Ref |\n'
+              printf '|---|---|---|---|---|\n'
+            } > docs/audit/audit-log.md
+          fi
+
+          printf '%s\n' "$row" >> docs/audit/audit-log.md
+          git add docs/audit/audit-log.md
+          git commit -m "audit: ${EVENT} ${COMMIT_SHA}"
+          git push origin HEAD:audit-log

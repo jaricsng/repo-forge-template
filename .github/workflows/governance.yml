@@ -1,0 +1,56 @@
+name: Governance
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+    branches: [main]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  pr-title:
+    name: PR Title
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      # Untrusted input: bound to an env var and never interpolated into the
+      # shell command, to avoid script injection.
+      PR_TITLE: ${{ github.event.pull_request.title }}
+    steps:
+      - name: Validate Conventional Commit title
+        run: |
+          pattern='^(build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test)(\([a-z0-9 ._/-]+\))?!?: .+'
+          if printf '%s' "$PR_TITLE" | grep -qE "$pattern"; then
+            echo "PR title OK: $PR_TITLE"
+          else
+            echo "::error::PR title must follow Conventional Commits, e.g. 'feat: add readiness checks'"
+            echo "Got: $PR_TITLE"
+            exit 1
+          fi
+
+  signed-commits:
+    name: Signed Commits
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      GH_TOKEN: ${{ github.token }}
+      PR_NUMBER: ${{ github.event.pull_request.number }}
+      REPO: ${{ github.repository }}
+    steps:
+      - name: Verify every commit in the PR is signed
+        run: |
+          unverified=$(gh api "repos/${REPO}/pulls/${PR_NUMBER}/commits" --paginate \
+            --jq '.[] | select(.commit.verification.verified == false) | .sha')
+          if [ -n "$unverified" ]; then
+            echo "::error::These commits do not have a verified signature:"
+            echo "$unverified"
+            echo "Sign commits (git commit -S) with a key registered on GitHub."
+            exit 1
+          fi
+          echo "All PR commits have verified signatures."
