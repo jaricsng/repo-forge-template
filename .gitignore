@@ -1,0 +1,40 @@
+# Build artifacts (see Makefile: build, release, clean)
+/bin/
+/dist/
+
+# Test & coverage output
+coverage.out
+coverage.html
+*.test
+*.out
+
+# Security / supply-chain artifacts
+sbom.spdx.json
+*.sarif
+
+# Local configuration (commit config.example.yaml only, never a real config)
+config.yaml
+config.yml
+config.*.local.yaml
+*.local.yaml
+.env
+.env.*
+
+# Go
+vendor/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Editor / IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
