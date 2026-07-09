@@ -1,0 +1,32 @@
+version: 2
+updates:
+  # Go module dependencies.
+  - package-ecosystem: gomod
+    directory: "/"
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 10
+    commit-message:
+      prefix: "deps"
+    groups:
+      go-dependencies:
+        patterns:
+          - "*"
+
+  # GitHub Actions. Dependabot updates the pinned commit SHAs (and their
+  # trailing version comments), so pinning stays maintainable.
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 10
+    commit-message:
+      prefix: "ci"
+
+  # Base image in the Dockerfile.
+  - package-ecosystem: docker
+    directory: "/"
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: "docker"

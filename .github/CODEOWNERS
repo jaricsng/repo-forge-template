@@ -1,0 +1,19 @@
+# Code owners for this repository.
+#
+# Branch protection on main enables "Require review from Code Owners"; that
+# rule is a no-op without this file. The final matching pattern wins, so the
+# catch-all below makes the owner a required reviewer on every pull request.
+#
+# Add more specific rules above the catch-all to route sensitive paths to
+# additional reviewers, e.g.:
+#   /policy/                 @jaricsng @security-team
+#   /.github/workflows/      @jaricsng @security-team
+
+*                            @jaricsng
+
+# Security-sensitive surfaces call out the owner explicitly so intent is
+# clear even if the catch-all is ever narrowed.
+/.github/                    @jaricsng
+/policy/                     @jaricsng
+/scripts/                    @jaricsng
+/Dockerfile                  @jaricsng
