@@ -68,7 +68,7 @@ flowchart LR
     DAST --> Merge
 
     Merge -->|yes, 1+ CODEOWNER approval| MainBranch[main]
-    MainBranch --> AuditLog[Audit log entry appended]
+    MainBranch --> AuditLog[Audit entry appended to audit-log branch]
     MainBranch -->|tag pushed| Release[goreleaser: build, sign, SBOM]
     Release --> GHRelease[GitHub Release + SBOM asset]
 ```
@@ -95,3 +95,8 @@ graph TD
 - **Readiness vs. liveness are separate endpoints** deliberately: a
   process can be alive but not ready (e.g., warming a cache), and
   conflating the two causes premature traffic routing during startup.
+- **Security headers on every response** (`securityHeaders` middleware in
+  `service.go`): CSP, HSTS, `X-Content-Type-Options`, `X-Frame-Options`,
+  and `Referrer-Policy`. These are asserted by a unit test and by the
+  OWASP ZAP rules (`test/security/zap-rules.tsv`), so the DAST scan and
+  the code stay in agreement.

@@ -6,15 +6,16 @@ below is deliberately lightweight — the tooling catches the rest.
 
 ## Prerequisites
 
-- Go 1.22+
+- Go 1.26+ (pinned in `go.mod`)
 - [pre-commit](https://pre-commit.com/): `pip install pre-commit`
 - [Conftest](https://www.conftest.dev/) (for local OPA policy checks)
-- A GPG or SSH signing key configured with git (commits must be signed)
+- A GPG or SSH signing key configured with git (commits must be signed —
+  see the README's "Branch protection & commit signing" section)
 
 ## One-time setup
 
 ```bash
-git clone git@github.com:jaric/repo-forge-template.git
+git clone git@github.com:jaricsng/repo-forge-template.git
 cd repo-forge-template
 pre-commit install
 go mod download
@@ -36,8 +37,11 @@ go mod download
    ```bash
    git commit -S -m "feat: add readiness probe dependency checks"
    ```
-   Commit messages follow [Conventional Commits](https://www.conventionalcommits.org/):
-   `feat:`, `fix:`, `docs:`, `refactor:`, `test:`, `chore:`, `security:`
+   Commit messages — and, more importantly, the **PR title** (enforced by
+   the Governance check) — follow
+   [Conventional Commits](https://www.conventionalcommits.org/). Allowed
+   types: `feat`, `fix`, `docs`, `refactor`, `perf`, `test`, `build`, `ci`,
+   `chore`, `style`, `revert`.
 4. **Pull `main` again before pushing**, in case it moved on while you worked:
    ```bash
    git fetch origin && git rebase origin/main

@@ -24,18 +24,18 @@ Please **do not** open a public GitHub issue for security vulnerabilities.
 
 ## Our Security Controls
 
-This repository enforces the following automatically, on every pull request
-(see `.github/workflows/security.yml` and `owasp-dast.yml`):
+This repository enforces the following automatically on every pull request
+(see `.github/workflows/security.yml`), plus the DAST scan noted below:
 
 - **SAST**: CodeQL and gosec scan every PR and push to `main`.
 - **Secret scanning**: gitleaks blocks commits containing credentials.
 - **Dependency audit**: govulncheck flags known-vulnerable dependencies.
-- **DAST**: OWASP ZAP baseline scan runs against a live instance weekly and
-  on every PR.
+- **DAST**: OWASP ZAP baseline scan (`owasp-dast.yml`) runs against a live
+  instance on pushes to `main` and on a weekly schedule.
 - **Policy as code**: OPA/Conftest rules block insecure GitHub Actions
   configuration and container misconfiguration before merge.
-- **SBOM**: a signed SPDX software bill of materials is generated on every
-  release for downstream vulnerability tracking.
+- **SBOM**: an SPDX software bill of materials is generated for every build
+  and uploaded as an artifact for downstream vulnerability tracking.
 
 ## Disclosure Policy
 

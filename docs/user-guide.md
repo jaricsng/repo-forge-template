@@ -17,6 +17,11 @@ scaffolding stays as-is.
 | GET | `/healthz` | Liveness probe — is the process running? | `200 {"status":"alive"}` |
 | GET | `/readyz` | Readiness probe — can it serve traffic? | `200 {"status":"ready"}` |
 
+All responses are `application/json` and carry baseline security headers
+(`Content-Security-Policy`, `Strict-Transport-Security`,
+`X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`), applied by
+the `securityHeaders` middleware.
+
 ## Configuration
 
 Configuration is layered: environment variables override `config.yaml`,

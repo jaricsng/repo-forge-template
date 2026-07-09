@@ -6,6 +6,9 @@ supply-chain security (SBOM, signed releases), and documentation kept in
 sync with code. Use this as the scaffold output for `repo-forge`, or clone
 it directly for a new service.
 
+**Starting a new project from this template?** See
+[docs/template-usage.md](docs/template-usage.md) for the step-by-step guide.
+
 ## Why this exists
 
 Starting a new repository correctly — branch protection, security scanning,
@@ -16,7 +19,7 @@ an afterthought.
 ## Quickstart
 
 ```bash
-git clone git@github.com:jaric/repo-forge-template.git
+git clone git@github.com:jaricsng/repo-forge-template.git
 cd repo-forge-template
 pre-commit install        # enable local hooks (see .pre-commit-config.yaml)
 make build                # compiles ./bin/app with version metadata
@@ -28,6 +31,7 @@ curl localhost:8080/healthz
 
 | Concern | Where |
 |---|---|
+| Starting a new project from this template | `docs/template-usage.md` |
 | CI (lint, unit, e2e, build) | `.github/workflows/ci.yml` |
 | Security (SAST, secrets, SCA) | `.github/workflows/security.yml` |
 | Dynamic security testing (OWASP ZAP) | `.github/workflows/owasp-dast.yml` |

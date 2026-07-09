@@ -19,7 +19,9 @@ the behavior.
 3. Publishing the GitHub Release triggers `sbom.yml` to attach the SBOM,
    and `goreleaser` (run via a release workflow, or manually with
    `make release` for a dry run) builds and signs binaries.
-4. Verify the audit trail entry was appended in `docs/audit/audit-log.md`.
+4. Verify the audit trail entry was appended on the `audit-log` branch
+   (`docs/audit/audit-log.md` there), written automatically by
+   `audit-log.yml`.
 
 ## Health checks
 
@@ -64,7 +66,7 @@ from the load balancer / orchestrator.
 
 ## Rollback procedure
 
-1. Identify the last known-good tag from `docs/audit/audit-log.md` or
+1. Identify the last known-good tag from the `audit-log` branch ledger or
    GitHub Releases.
 2. Redeploy that tag's binary/image through your deployment tooling.
 3. Confirm `/healthz` and `/readyz` return 200 post-rollback.
