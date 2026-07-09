@@ -13,31 +13,61 @@ set -euo pipefail
 
 REPO="${1:?Usage: $0 <owner>/<repo>}"
 
+# Solo maintainers can set SOLO_DEV=1 to exempt admins from these rules,
+# letting the repo owner self-merge (or push directly) without a second
+# reviewer. Teams should leave it unset so protection applies to everyone,
+# admins included.
+if [[ "${SOLO_DEV:-0}" == "1" ]]; then
+  ENFORCE_ADMINS=false
+  echo "SOLO_DEV=1: admins are exempt from protection (owner can self-merge)."
+else
+  ENFORCE_ADMINS=true
+fi
+
 echo "Applying branch protection to ${REPO}#main ..."
 
+# The branch-protection API requires a typed JSON body (booleans, integers,
+# nested objects). gh's -f flag sends everything as strings, which the API
+# rejects with 422, so we build the payload as JSON and pipe it via --input.
 gh api \
   --method PUT \
   -H "Accept: application/vnd.github+json" \
   "/repos/${REPO}/branches/main/protection" \
-  -f "required_status_checks[strict]=true" \
-  -f "required_status_checks[contexts][]=Lint" \
-  -f "required_status_checks[contexts][]=Unit Tests" \
-  -f "required_status_checks[contexts][]=End-to-End Tests" \
-  -f "required_status_checks[contexts][]=Build" \
-  -f "required_status_checks[contexts][]=CodeQL (SAST)" \
-  -f "required_status_checks[contexts][]=gosec (Go SAST)" \
-  -f "required_status_checks[contexts][]=Secret Scanning" \
-  -f "required_status_checks[contexts][]=Dependency Vulnerability Audit" \
-  -f "required_status_checks[contexts][]=OPA / Conftest Policy Checks" \
-  -f "enforce_admins=true" \
-  -f "required_pull_request_reviews[required_approving_review_count]=1" \
-  -f "required_pull_request_reviews[dismiss_stale_reviews]=true" \
-  -f "required_pull_request_reviews[require_code_owner_reviews]=true" \
-  -f "required_conversation_resolution=true" \
-  -f "required_signatures=true" \
-  -f "restrictions=null" \
-  -f "allow_force_pushes=false" \
-  -f "allow_deletions=false"
+  --input - <<JSON
+{
+  "required_status_checks": {
+    "strict": true,
+    "contexts": [
+      "Lint",
+      "Unit Tests",
+      "End-to-End Tests",
+      "Build",
+      "CodeQL (SAST)",
+      "gosec (Go SAST)",
+      "Secret Scanning",
+      "Dependency Vulnerability Audit",
+      "OPA / Conftest Policy Checks"
+    ]
+  },
+  "enforce_admins": ${ENFORCE_ADMINS},
+  "required_pull_request_reviews": {
+    "required_approving_review_count": 1,
+    "dismiss_stale_reviews": true,
+    "require_code_owner_reviews": true
+  },
+  "required_conversation_resolution": true,
+  "restrictions": null,
+  "allow_force_pushes": false,
+  "allow_deletions": false
+}
+JSON
+
+# required_signatures lives on a separate endpoint (it is not part of the
+# protection payload above), so apply it independently.
+gh api \
+  --method POST \
+  -H "Accept: application/vnd.github+json" \
+  "/repos/${REPO}/branches/main/protection/required_signatures" >/dev/null
 
 echo "Branch protection applied. Verify at:"
 echo "https://github.com/${REPO}/settings/branches"
