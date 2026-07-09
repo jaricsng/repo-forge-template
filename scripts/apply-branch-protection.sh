@@ -46,7 +46,9 @@ gh api \
       "gosec (Go SAST)",
       "Secret Scanning",
       "Dependency Vulnerability Audit",
-      "OPA / Conftest Policy Checks"
+      "OPA / Conftest Policy Checks",
+      "PR Title",
+      "Signed Commits"
     ]
   },
   "enforce_admins": ${ENFORCE_ADMINS},
