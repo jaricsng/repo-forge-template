@@ -1,0 +1,7 @@
+# Copy to config.yaml for local overrides (config.yaml is gitignored).
+# Environment variables (APP_PORT, APP_ENVIRONMENT, APP_LOG_LEVEL) always
+# take precedence over this file.
+
+port: 8080
+environment: dev
+log_level: debug

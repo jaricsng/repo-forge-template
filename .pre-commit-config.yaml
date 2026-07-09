@@ -1,0 +1,40 @@
+# Pre-commit hooks. Install once per clone with:
+#   pip install pre-commit && pre-commit install
+# Runs automatically on every `git commit`; run manually with:
+#   pre-commit run --all-files
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-merge-conflict
+      - id: check-added-large-files
+        args: ["--maxkb=1024"]
+      - id: detect-private-key
+
+  - repo: https://github.com/dnephin/pre-commit-golang
+    rev: v0.5.1
+    hooks:
+      - id: go-fmt
+      - id: go-vet-mod
+      - id: go-imports
+      - id: golangci-lint-mod
+      - id: go-unit-tests
+        args: ["./internal/...", "./test/unit/..."]
+
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.18.4
+    hooks:
+      - id: gitleaks
+
+  - repo: local
+    hooks:
+      - id: conftest-policy-check
+        name: OPA/Conftest policy check
+        entry: conftest test --policy policy/ .github/workflows/
+        language: system
+        pass_filenames: false
+        files: '\.github/workflows/.*\.ya?ml$'

@@ -1,0 +1,9 @@
+# ZAP scan rule overrides.
+# Format: <rule-id>	<action>	<comment>
+# Actions: IGNORE, WARN, FAIL
+#
+# Example: the health endpoints intentionally return minimal JSON with
+# no auth, so missing-anti-CSRF-token is not applicable to them.
+10202	IGNORE	Absence of Anti-CSRF Tokens - not applicable to unauthenticated health endpoints
+10038	FAIL	Content Security Policy header must be present in production responses
+10035	FAIL	Strict-Transport-Security header must be present

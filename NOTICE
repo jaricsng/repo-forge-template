@@ -1,0 +1,27 @@
+repo-forge-template
+Copyright (c) 2026 Jaric
+
+This product includes software developed by third parties. A machine-
+generated, complete inventory of dependencies and their licenses is
+produced on every release as sbom.spdx.json (see .github/workflows/sbom.yml)
+and should be treated as the authoritative source. The entries below are a
+human-readable summary of direct dependencies as of the last manual review.
+
+--------------------------------------------------------------------------
+Direct dependencies (Go modules):
+
+  github.com/spf13/cobra      - Apache License 2.0
+  github.com/spf13/viper      - MIT License
+  github.com/stretchr/testify - MIT License
+
+--------------------------------------------------------------------------
+Direct dependencies (CI/tooling, not distributed with the binary):
+
+  golangci-lint  - GPL-3.0 (dev tooling only; not linked into releases)
+  gosec          - Apache License 2.0
+  gitleaks       - MIT License
+  OWASP ZAP      - Apache License 2.0
+  Open Policy Agent (OPA) / Conftest - Apache License 2.0
+  Syft           - Apache License 2.0
+
+To regenerate this inventory, run: make notice

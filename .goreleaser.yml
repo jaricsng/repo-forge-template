@@ -1,0 +1,65 @@
+version: 2
+
+before:
+  hooks:
+    - go mod tidy
+
+builds:
+  - main: ./cmd/app
+    env: [CGO_ENABLED=0]
+    goos: [linux, darwin, windows]
+    goarch: [amd64, arm64]
+    ldflags:
+      - -s -w
+      - -X github.com/jaric/repo-forge-template/internal/version.Version={{.Version}}
+      - -X github.com/jaric/repo-forge-template/internal/version.Commit={{.ShortCommit}}
+      - -X github.com/jaric/repo-forge-template/internal/version.BuildDate={{.Date}}
+
+archives:
+  - format: tar.gz
+    name_template: >-
+      {{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}
+    format_overrides:
+      - goos: windows
+        format: zip
+
+checksum:
+  name_template: "checksums.txt"
+
+sboms:
+  - artifacts: archive # attach a per-artifact SBOM to each release asset
+
+signs:
+  - cmd: cosign
+    signature: "${artifact}.sig"
+    certificate: "${artifact}.pem"
+    args:
+      - sign-blob
+      - --output-signature=${signature}
+      - --output-certificate=${certificate}
+      - ${artifact}
+      - --yes
+    artifacts: checksum
+
+changelog:
+  use: github
+  sort: asc
+  groups:
+    - title: "Features"
+      regexp: '^feat(\(.+\))?:'
+    - title: "Fixes"
+      regexp: '^fix(\(.+\))?:'
+    - title: "Security"
+      regexp: '^security(\(.+\))?:'
+    - title: "Other"
+      order: 999
+
+release:
+  footer: |
+    ## Verifying this release
+    Signatures are produced with [cosign](https://github.com/sigstore/cosign)
+    in keyless mode. Verify with:
+    ```
+    cosign verify-blob --certificate <asset>.pem --signature <asset>.sig <asset>
+    ```
+    A software bill of materials (SBOM) is attached per archive.
