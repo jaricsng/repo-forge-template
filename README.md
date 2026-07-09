@@ -43,6 +43,43 @@ curl localhost:8080/healthz
 | Operations runbook | `docs/runbook.md` |
 | Architecture + diagrams | `docs/architecture.md` |
 
+## Branch protection & commit signing
+
+Apply the hardened `main` protection rules once, after pushing your repo:
+
+```bash
+# Team repo: admins are also subject to the rules.
+./scripts/apply-branch-protection.sh <owner>/<repo>
+
+# Solo repo: exempt admins so you can self-merge without a second reviewer.
+SOLO_DEV=1 ./scripts/apply-branch-protection.sh <owner>/<repo>
+```
+
+This enables **required signed commits**. If you don't set up signing, every
+push to `main` is rejected (`Commits must have verified signatures`) unless an
+admin bypasses it — so configure signing before you rely on protection.
+
+SSH signing is the least-friction option and reuses the SSH key you already
+push with (no GPG keyring needed):
+
+```bash
+# 1. Tell git to sign commits and tags with your SSH key.
+git config --global gpg.format ssh
+git config --global user.signingkey ~/.ssh/id_ed25519.pub   # your public key
+git config --global commit.gpgsign true
+git config --global tag.gpgsign true
+
+# 2. Register the SAME public key on GitHub as a *signing* key (separate from
+#    the authentication key), so GitHub marks your commits "Verified".
+gh auth refresh -h github.com -s admin:ssh_signing_key
+gh ssh-key add ~/.ssh/id_ed25519.pub --type signing --title "commit-signing"
+```
+
+Use `--global` for all your repos, or drop it (or `git config --local ...`) to
+scope signing to this repo only. Signing configuration lives in git config and
+is never committed, so cloning this template never forces signing on anyone —
+each user opts in with the steps above.
+
 ## Documentation-code sync policy
 
 Every PR that changes behavior must update the relevant doc and Mermaid
